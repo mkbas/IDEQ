@@ -15,7 +15,6 @@ from pytorch_lightning.strategies.ddp import DDPStrategy
 from pytorch_lightning.utilities import rank_zero_info
 
 from pl_tsp_model import TSPModel
-from pl_mis_model import MISModel
 
 torch.cuda.amp.autocast(enabled=True)
 torch.cuda.empty_cache()
@@ -87,9 +86,6 @@ def main(args):
     if args.task == 'tsp':
       model_class = TSPModel
       saving_mode = 'min'
-    elif args.task == 'mis':
-      model_class = MISModel
-      saving_mode = 'max'
     else:
         raise NotImplementedError
 
