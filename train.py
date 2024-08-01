@@ -62,9 +62,6 @@ def arg_parser():
   parser.add_argument('--rewrite_steps', type=int, default=3)
   parser.add_argument('--inference_steps', type=int, default=5)
 
-  parser.add_argument('--cdf', action='store_true')
-  parser.add_argument('--test_guidance', action='store_true')
-  parser.add_argument('--no_guidance', action='store_true')
   parser.add_argument('--n_rep', type=int, default=0)
   
   parser.add_argument('--new_denoise', action='store_true')
