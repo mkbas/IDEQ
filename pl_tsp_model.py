@@ -52,38 +52,23 @@ class TSPModel(COMetaModel):
       )
 
       if not self.sparse:
-        x0_pred_prob = x0_pred.permute((0, 2, 3, 1)).contiguous().softmax(dim=-1)  # b, n, n, 2
         raise NotImplementedError()
       else:
         x0_pred_prob = x0_pred.reshape((1, points.shape[0], -1, 2)).softmax(dim=-1)
-        #print(x0_pred_prob.shape)
         if self.args.new_denoise:
-            ########## ADDING REFINEMENT (SPARSE ONLY) ###########
-            #t0=time.time()
             np_points=points.cpu().numpy()[:points.shape[0]//self.args.parallel_sampling,:]
             np_e_i=edge_index.cpu().numpy()[:,:edge_index.shape[1]//self.args.parallel_sampling]
-            
-            #print('#'*50,'\n',x0_pred_prob.shape,points.shape ,np_points.shape, edge_index.shape,np_e_i.shape, '*'*50,'\n',)
-            #print(edge_index.min(), edge_index.max(), edge_index)
            
             x0_tilde, _ = merge_tours(
               x0_pred_prob.detach().cpu().numpy()[..., 1].reshape(-1) + 1e-6, np_points, np_e_i,
               sparse_graph=self.sparse,
               parallel_sampling=self.args.parallel_sampling,
             )
-            #print([min(truc) for truc in x0_tilde])
-            #t1=time.time()
-            #print(f'time for merge: {t1-t0}')
             # Refine using 2-opt
             x0_tilde, _ = batched_two_opt_torch(
                 points.cpu().numpy().astype("float64"), np.array(x0_tilde).astype('int64'),
                 max_iterations=50, device=device #self.args.two_opt_iterations
             )
-            #t0=time.time()
-            #print(f'time for 2opt: {t0-t1}')
-            #x0_tilde = np.concatenate(x0_tilde, axis=0)
-            #print('*'*50,'\n',x0_pred_prob.shape,points.shape ,edge_index.shape,'*'*50,'\n',)
-            #print(len(x0_tilde),x0_tilde.shape)
             x0_pred_list=[]
             for x0 in x0_tilde:
                 x0_pred_list.append(torch.from_numpy(np.array(self.tour2adj(x0, 
@@ -92,17 +77,9 @@ class TSPModel(COMetaModel):
                                                 self.args.sparse_factor, 
                                                 edge_index[:,:edge_index.shape[1]//self.args.parallel_sampling].clone(),
                                                 )).reshape(1,-1,x0_pred_prob.shape[2])))
-            #print(x0_pred_list[0].shape)
             x0_pred_prob[..., 1] = torch.cat(x0_pred_list, axis=0)
-            #print(temp.shape, x0_pred_prob.shape)
             x0_pred_prob[..., 0]=1-x0_pred_prob[..., 1]
-            #print(x0_pred_prob.shape)
-            #x0_pred_prob = x0_pred_prob.unsqueeze(0).to(device)  # [1, N, N] or [1, N]
             x0_pred_prob = x0_pred_prob.to(device)  # [1, N, N] or [1, N]
-            #print(x0_pred_prob.shape)
-            #t1=time.time()
-            #print(f'time to finish: {t1-t0}')
-            ############## END OF ADDING #####################
         
         
       xt, xt_prob = self.categorical_posterior(target_t, t, x0_pred_prob, xt)  # [b, n, n] 0 or 1
@@ -220,26 +197,13 @@ class TSPModel(COMetaModel):
       for suff in range(self.args.rewrite_steps):
         g_stacked_tours = []
         # optimal adjacent matrix
-        if not original:
-            if suff==0:
-                g_x0=xt.reshape(self.args.parallel_sampling, -1)[0].clone()
-                if self.args.parallel_sampling > 1:
-                  if not self.sparse:
-                    g_x0 = g_x0.repeat(self.args.parallel_sampling, 1, 1)  # [1, N ,N] -> [B, N, N]
-                  else:
-                    g_x0 = g_x0.repeat(self.args.parallel_sampling, 1)
+        g_x0 = self.tour2adj(g_best_tour, np_points, self.sparse, self.args.sparse_factor, original_edge_index)
+        g_x0 = g_x0.unsqueeze(0).to(device)  # [1, N, N] or [1, N]
+        if self.args.parallel_sampling > 1:
+            if not self.sparse:
+              g_x0 = g_x0.repeat(self.args.parallel_sampling, 1, 1)  # [1, N ,N] -> [B, N, N]
             else:
-                #g_x0 = self.tour2adj(g_best_tour, np_points, self.sparse, self.args.sparse_factor, original_edge_index)
-                #g_x0 = g_x0.unsqueeze(0).to(device)  # [1, N, N] or [1, N]
-                g_x0=g_xt.clone()
-        else:
-            g_x0 = self.tour2adj(g_best_tour, np_points, self.sparse, self.args.sparse_factor, original_edge_index)
-            g_x0 = g_x0.unsqueeze(0).to(device)  # [1, N, N] or [1, N]
-            if self.args.parallel_sampling > 1:
-                if not self.sparse:
-                  g_x0 = g_x0.repeat(self.args.parallel_sampling, 1, 1)  # [1, N ,N] -> [B, N, N]
-                else:
-                  g_x0 = g_x0.repeat(self.args.parallel_sampling, 1)
+              g_x0 = g_x0.repeat(self.args.parallel_sampling, 1)
         if self.sparse:
           g_x0 = g_x0.reshape(-1)
 
@@ -267,11 +231,7 @@ class TSPModel(COMetaModel):
           t1, t2 = time_schedule(i)
           t1 = np.array([t1]).astype(int)
           t2 = np.array([t2]).astype(int)
-          #print(f't1:{t1}\nt2: {t2}')
-          if self.no_guidance:
-              g_xt ,_= self.categorical_denoise_step(points, g_xt, t1, device, edge_index, target_t=t2)
-          else:
-              g_xt = self.guided_categorical_denoise_step(points, g_xt, t1, device, edge_index, target_t=t2)
+          g_xt ,_= self.categorical_denoise_step(points, g_xt, t1, device, edge_index, target_t=t2)
           if t2 > 0:
               Q_t2p1 = np.linalg.inv(self.diffusion.Q_bar[t2]) @ self.diffusion.Q_bar[t2+1]
               Q_t2p1 = torch.from_numpy(Q_t2p1).float().to(g_xt.device)
@@ -283,10 +243,7 @@ class TSPModel(COMetaModel):
                 
               g_xt2p1_prob= F.one_hot(g_xt.long(), num_classes=2).float() @Q_t2p1
               g_xt=torch.bernoulli(g_xt2p1_prob[..., 1].clamp(0, 1))
-              if self.no_guidance:
-                  g_xt ,_= self.categorical_denoise_step(points, g_xt, t2+1, device, edge_index, target_t=t2)
-              else:
-                  g_xt = self.guided_categorical_denoise_step(points, g_xt, t2+1, device, edge_index, target_t=t2)
+              g_xt ,_= self.categorical_denoise_step(points, g_xt, t2+1, device, edge_index, target_t=t2)
 
         g_adj_mat = g_xt.float().cpu().detach().numpy() + 1e-6
         
