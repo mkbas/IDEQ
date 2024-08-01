@@ -108,48 +108,6 @@ class TSPModel(COMetaModel):
       xt, xt_prob = self.categorical_posterior(target_t, t, x0_pred_prob, xt)  # [b, n, n] 0 or 1
       return xt, xt_prob
 
-  def guided_categorical_denoise_step(self, points, xt, t, device, edge_index=None, target_t=None):
-    torch.set_grad_enabled(True)
-    xt = xt.float()  # b, n, n
-    xt.requires_grad = True
-    t = torch.from_numpy(t).view(1)
-
-    # [b, 2, n, n]
-    with torch.inference_mode(False):
-      # print(points.shape, xt.shape)
-      x0_pred = self.forward(
-        points.float().to(device),
-        xt.to(device),
-        t.float().to(device),
-        edge_index.long().to(device) if edge_index is not None else None,
-      )
-
-      if not self.sparse:
-        x0_pred_prob = x0_pred.permute((0, 2, 3, 1)).contiguous().softmax(dim=-1)
-        pass
-      else:
-        x0_pred_prob = x0_pred.reshape((1, points.shape[0], -1, 2)).softmax(dim=-1)
-        pass
-    
-    
-      if not self.sparse:
-        dis_matrix = self.points2adj(points)
-        cost_est = (dis_matrix * x0_pred_prob[..., 1]).sum()
-        cost_est.requires_grad_(True)
-        cost_est.backward()
-      else:
-        dis_matrix = torch.sqrt(torch.sum((points[edge_index.T[:, 0]] - points[edge_index.T[:, 1]]) ** 2, dim=1))
-        dis_matrix = dis_matrix.reshape((1, points.shape[0], -1))
-        cost_est = (dis_matrix * x0_pred_prob[..., 1]).sum()
-        cost_est.requires_grad_(True)
-        cost_est.backward()
-      assert xt.grad is not None
-
-      if self.args.norm is True:
-        xt.grad = nn.functional.normalize(xt.grad, p=2, dim=-1)
-      xt = self.guided_categorical_posterior(target_t, t, x0_pred_prob, xt)
-
-      return xt.detach()
 
   def test_step(self, batch, batch_idx, split='test'):
     edge_index = None
@@ -178,7 +136,6 @@ class TSPModel(COMetaModel):
     tsp_solver = TSPEvaluator(np_points)  # np_points: [N, 2] ndarray
     gt_cost = tsp_solver.evaluate(np_gt_tour)  # np_gt_tour: [N+1] ndarray
 
-    #print('*'*50,'\n',points.shape, edge_index.shape, batch_size, adj_matrix.shape, np_edge_index.shape)
 
     if self.args.parallel_sampling > 1:
       if not self.sparse:
@@ -218,22 +175,7 @@ class TSPModel(COMetaModel):
         # [B, N, N], heatmap score
         xt, xt_prob = self.categorical_denoise_step(
           points, xt, t1, device, edge_index, target_t=t2)
-########
-#        if t2 > 0 and t2<self.diffusion.T/2:
-#            Q_t2p1 = np.linalg.inv(self.diffusion.Q_bar[t2]) @ self.diffusion.Q_bar[t2+5]
-#            Q_t2p1 = torch.from_numpy(Q_t2p1).float().to(xt.device)
-#        else:
-#            Q_t2p1 = torch.eye(2).float().to(xt.device) 
-#        for _ in range(self.args.n_rep):
-#            # [1, N, N], denoise, heatmap for edges
-#           
-#            g_xt2p1_prob= F.one_hot(xt.long(), num_classes=2).float() @Q_t2p1
-#            g_xt=torch.bernoulli(g_xt2p1_prob[..., 1].clamp(0, 1))
-#            if self.no_guidance:
-#                g_xt ,_= self.categorical_denoise_step(points, g_xt, t2+5, device, edge_index, target_t=t2)
-#            else:
-#               g_xt = self.guided_categorical_denoise_step(points, g_xt, t2+5, device, edge_index, target_t=t2)
-#############
+
       adj_mat = xt.float().cpu().detach().numpy() + 1e-6  # [B, N, N]
 
       if self.args.save_numpy_heatmap and not self.args.rewrite:
@@ -268,18 +210,9 @@ class TSPModel(COMetaModel):
     # select the best tour
     g_best_tour = solved_tours[best_id]  # [N+1] ndarray
 
-    original=True
 
     guided_gap, g_ns, g_merge_iterations, g_best_solved_cost = -1, -1, -1, -1
-    #####
-    #removing the 2-opt 
-    #
-    if not original:
-        g_best_tour=tours
-    #print('*'*50, xt.shape, '*'*50)
-    #
-    #######
-    #ts=np.linspace(.25,.15,self.args.rewrite_steps)
+
     # Local Rewrite
     if self.args.rewrite:
       g_best_solved_cost = best_solved_cost
@@ -356,44 +289,11 @@ class TSPModel(COMetaModel):
                   g_xt = self.guided_categorical_denoise_step(points, g_xt, t2+1, device, edge_index, target_t=t2)
 
         g_adj_mat = g_xt.float().cpu().detach().numpy() + 1e-6
-
-        ###########
-        #np.save(pref+'_'+str(suff), g_adj_mat)
-        ###########
         
         if self.args.save_numpy_heatmap:
           self.run_save_numpy_heatmap(g_adj_mat, np_points, real_batch_idx, split)
     
-        if original:
-            g_tours, g_merge_iterations = merge_tours(
-              g_adj_mat, np_points, np_edge_index,
-              sparse_graph=self.sparse,
-              parallel_sampling=self.args.parallel_sampling,
-            )
-            
-            # Refine using 2-opt
-            g_solved_tours, g_ns = batched_two_opt_torch(
-                np_points.astype("float64"), np.array(g_tours).astype('int64'),
-                max_iterations=self.args.two_opt_iterations, device=device
-            )
-            g_stacked_tours.append(g_solved_tours)
-        
-            g_solved_tours = np.concatenate(g_stacked_tours, axis=0)
-        
-            tsp_solver = TSPEvaluator(np_points)  # np_points: [N, 2] ndarray
-            gt_cost = tsp_solver.evaluate(np_gt_tour)  # np_gt_tour: [N+1] ndarray
-        
-            g_total_sampling = self.args.parallel_sampling
-            g_all_solved_costs = [tsp_solver.evaluate(g_solved_tours[i]) for i in range(g_total_sampling)]
-            g_best_solved_cost_tmp, g_best_id = np.min(g_all_solved_costs), np.argmin(g_all_solved_costs)
-            g_best_solved_cost = min(g_best_solved_cost, g_best_solved_cost_tmp)
-        
-            guided_gap = (g_best_solved_cost - gt_cost) / gt_cost * 100
-        
-            # select the best tour
-            g_best_tour = g_solved_tours[g_best_id]
-    #indentation move 1 level upward
-    if not original:
+    
         g_tours, g_merge_iterations = merge_tours(
           g_adj_mat, np_points, np_edge_index,
           sparse_graph=self.sparse,
@@ -421,37 +321,9 @@ class TSPModel(COMetaModel):
     
         # select the best tour
         g_best_tour = g_solved_tours[g_best_id]
-    # End indenation change
-    
-    # print("gap: {}% -> {}%".format(gap, guided_gap))
 
-    #print(solved_tours.shape, np.array(tours).astype('int64').shape, adj_mat.shape)
-    #print(g_solved_tours.shape, np.array(g_tours).astype('int64').shape, g_adj_mat.shape)
     coord=np_points.reshape(-1,2)
-    if False:
-        with open('resv2.out', 'a') as f:
-            xy=[str(c[i]) for c in coord for i in range(2) ]
-            f.write(str(" ").join(xy))
-            f.write(str("-----"))
-            f.write(str(" ").join(str(node_idx) for node_idx in np_gt_tour))
-            f.write(str("-----"))
-            f.write((" ").join([str(i) for i in original_edge_index.cpu().detach().numpy().flatten()]))
-            f.write(str("-----"))
-            diff_hm=[str(adj_mat[i]) for i in range(adj_mat.shape[-1])]
-            
-            diff_tour=[str(np.array(tours).astype('int64')[0,i]) for i in range(np.array(tours).astype('int64').shape[-1])]
-            diff_tour_2opt=[str(solved_tours[0,i]) for i in range(solved_tours.shape[-1])]
-            for xy in [diff_tour, diff_tour_2opt, diff_hm]:
-                f.write(str(" ").join(xy))
-                f.write(str("-----"))
-            t2t_hm=[str(g_adj_mat[i]) for i in range(g_adj_mat.shape[-1])]
-            
-            t2t_tour=[str(np.array(g_tours).astype('int64')[0,i]) for i in range(np.array(g_tours).astype('int64').shape[-1])]
-            t2t_tour_2opt=[str(g_solved_tours[0,i]) for i in range(g_solved_tours.shape[-1])]
-            for xy in [t2t_tour, t2t_tour_2opt, t2t_hm]:
-                f.write(str(" ").join(xy))
-                f.write(str("-----"))
-            f.write('\n')   
+ 
             
     with open(self.args.res_file, "a+") as f:
         f.write(str(gt_cost)+" ; "+str(g_best_solved_cost)+"\n"+" ; "+str(coord.shape[0]))                
