@@ -34,9 +34,6 @@ class TSPModel(COMetaModel):
       data_file=os.path.join(self.args.storage_path, self.args.validation_split),
       sparse_factor=self.args.sparse_factor,
     )
-    self.cdf=param_args.cdf
-    self.test_guidance = param_args.test_guidance
-    self.no_guidance = param_args.no_guidance
 
   def forward(self, x, adj, t, edge_index):
     return self.model(x, t, adj, edge_index)
