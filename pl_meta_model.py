@@ -178,13 +178,13 @@ class COMetaModel(pl.LightningModule):
       return edge_index
 
     def test_dataloader(self):
-      batch_size = self.args.batch_size
+      batch_size = 1
       print("Test dataset size:", len(self.test_dataset))
       test_dataloader = GraphDataLoader(self.test_dataset, batch_size=batch_size, shuffle=False)
       return test_dataloader
 
     def val_dataloader(self):
-      batch_size = self.args.batch_size
+      batch_size = 1
       val_dataset = torch.utils.data.Subset(self.validation_dataset, range(self.args.validation_examples))
       print("Validation dataset size:", len(val_dataset))
       val_dataloader = GraphDataLoader(val_dataset, batch_size=batch_size, shuffle=False)
