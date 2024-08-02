@@ -66,7 +66,6 @@ def arg_parser():
   
   parser.add_argument('--new_denoise', action='store_true')
   parser.add_argument('--res_file', type=str, default='variance.out')
-  parser.add_argument('--batch_size', type=int, default=1)
 
   args = parser.parse_args()
   return args
