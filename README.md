@@ -14,7 +14,7 @@ cd -
 ## Reproducing scritps
 
 ### TSP 500:
-'''bash
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 train.py   
   --task tsp 
@@ -39,10 +39,10 @@ train.py
   --rewrite_steps 3 
   --new_denoise 
   --res_file ...
-'''
+```
 
 for TSP 500 with seach (N=4) :
-'''bash
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 train.py   
   --task tsp 
@@ -67,10 +67,10 @@ train.py
   --rewrite_steps 3 
   --new_denoise 
   --res_file ...
-'''
+```
 
 ### TSP 1000:
-'''bash
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 train.py   
   --task tsp 
@@ -95,10 +95,10 @@ train.py
   --rewrite_steps 3 
   --new_denoise 
   --res_file ...
-'''
+```
 
 for TSP 1000 with seach (N=4) :
-'''bash
+```
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 train.py   
   --task tsp 
@@ -123,4 +123,4 @@ train.py
   --rewrite_steps 3 
   --new_denoise 
   --res_file ...
-'''
+```
