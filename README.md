@@ -16,7 +16,7 @@ cd -
 ### TSP 500:
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
-train.py   
+python train.py   
   --task tsp 
   --wandb_logger_name ... 
   --storage_path ./ 
@@ -44,7 +44,7 @@ train.py
 for TSP 500 with seach (N=4) :
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
-train.py   
+python train.py   
   --task tsp 
   --wandb_logger_name ... 
   --storage_path ./ 
@@ -72,7 +72,7 @@ train.py
 ### TSP 1000:
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
-train.py   
+python train.py   
   --task tsp 
   --wandb_logger_name ... 
   --storage_path ./ 
@@ -100,7 +100,7 @@ train.py
 for TSP 1000 with seach (N=4) :
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3  
-train.py   
+python train.py   
   --task tsp 
   --wandb_logger_name ... 
   --storage_path ./ 
