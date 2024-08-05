@@ -279,7 +279,8 @@ class TSPModel(COMetaModel):
     coord=np_points.reshape(-1,2)
  
             
-    with open(self.args.res_file, "a+") as f:
+    if self.args.res_file is not None:
+      with open(self.args.res_file, "a+") as f:
         f.write(str(gt_cost)+" ; "+str(g_best_solved_cost)+"\n"+" ; "+str(coord.shape[0]))                
     metrics = {
         f"{split}/rewrite_ratio": self.args.rewrite_ratio,#ts.mean(),#
