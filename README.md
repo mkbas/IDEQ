@@ -124,3 +124,6 @@ python train.py
   --new_denoise 
   --res_file ...
 ```
+## Checkpoints
+
+IDEQ chekpoints can be downloaded from these links: [TSP500](https://drive.google.com/file/d/1KQMl7-8VglVkfah5hwAnuu0yc0u4LNjg/view?usp=sharing), [TSP1000](https://drive.google.com/file/d/10duH0TW_kl8Or3teJf4zqhAfGJTViYeN/view?usp=sharing)
