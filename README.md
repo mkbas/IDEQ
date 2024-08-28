@@ -13,6 +13,8 @@ cd -
 
 ## Reproducing scritps
 
+Use the following code to reproduce the results of the paper: 
+
 ### TSP 500:
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
