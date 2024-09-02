@@ -11,7 +11,7 @@ python setup.py build_ext --inplace
 cd -
 ```
 
-## Reproducing scritps
+## Reproducing scripts
 
 Use the following code to reproduce the results of the paper: 
 
