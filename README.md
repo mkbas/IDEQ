@@ -99,7 +99,7 @@ python train.py
   --res_file ...
 ```
 
-for TSP 1000 with seach (N=4) :
+for TSP 1000 with search (N=4) :
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 python train.py   
