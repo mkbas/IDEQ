@@ -13,23 +13,24 @@ cd -
 
 ## Reproducing scripts
 
-Use the following code to reproduce the results of the paper: 
+Use the following code to reproduce the results of the paper. 
+For the results in the table 1 of the draft paper, the test/validation datasets were 2048 random 2D euclidean TSP instances. For Table 2 it was the tsplib instances.
 
 ### TSP 500:
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 python train.py   
   --task tsp 
-  --wandb_logger_name ... 
+  --wandb_logger_name ...         #replace '...' with your chosen wandb name
   --storage_path ./ 
-  --validation_split ...
-  --test_split ...
+  --validation_split ...          #replace '...' with the path/name to your validation dataset 
+  --test_split ...                #replace '...' with the path/name to your test dataset
   --validation_examples 8 
   --sparse_factor 50 
   --inference_schedule cosine 
   --inference_diffusion_steps 20 
   --resume_weight_only 
-  --ckpt_path ... 
+  --ckpt_path ...                  #replace '...' with the path/name to the model chackpoint (see below to download IDEQ checkpoints)
   --two_opt_iterations 5000 
   --sequential_sampling 1 
   --rewrite_ratio 0.25 
@@ -40,7 +41,7 @@ python train.py
   --n_rep 0 
   --rewrite_steps 3 
   --new_denoise 
-  --res_file ...
+  --res_file ...                    #replace '...' with the path/name of the detailed output file
 ```
 
 for TSP 500 with search (N=4) :
