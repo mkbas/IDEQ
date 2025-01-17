@@ -3,20 +3,30 @@
 ## Installation
 
 Code is largely built on [T2TCO](https://github.com/Thinklab-SJTU/T2TCO) and [DIFUSCO](https://github.com/Edward-Sun/DIFUSCO).
-Environnement installation has to follow T2TCO's environnement specifications as well as the additional cython package for merging the diffusion heatmap results:
+Environnement installation has to follow T2TCO's environnement specifications. In addition it requires compiling the Cmerge.so library from the C file in the utils folder :
 
 ```bash
-cd utils/cython_merge
-python setup.py build_ext --inplace
+cd utils
+gcc -O3 -march=native -shared -o Cmerge.so -fPIC cmerge.c
 cd -
 ```
 
 ## Reproducing scripts
 
-Use the following code to reproduce the results of the paper. 
+Use the following code to reproduce the results of the paper. This contains the fowlling sections: 
+- "data geenration" where the code is provided to generate the training and testing Euclidean 2D TSP random instances. TSP linstances and their solutions can be downloaded from the [TSPLIB website](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/)
+- "Checkpoint training": where the code is provided to retrain the checkpoint with the updated objective. Pre-trained chekcpoint files are also available in the 'checkpoint' folder. 
+- Testing" where the code provided allows to reproduce the results 
+
+### Data genearation 
+
+### Checkpoint training 
+
+### Testing 
+
 For the results in the table 1 of the draft paper, the test/validation datasets were 2048 random 2D euclidean TSP instances. For Table 2 it was the tsplib instances.
 
-### TSP 500:
+#### TSP 500:
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 python train.py   
@@ -41,7 +51,6 @@ python train.py
   --n_rep 0 
   --rewrite_steps 3 
   --new_denoise 
-  --res_file ...                    #replace '...' with the path/name of the detailed output file
 ```
 
 for TSP 500 with search (N=4) :
@@ -68,11 +77,9 @@ python train.py
   --do_test_only 
   --n_rep 0 
   --rewrite_steps 3 
-  --new_denoise 
-  --res_file ...
 ```
 
-### TSP 1000:
+#### TSP 1000:
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 python train.py   
@@ -96,8 +103,6 @@ python train.py
   --do_test_only 
   --n_rep 0 
   --rewrite_steps 3 
-  --new_denoise 
-  --res_file ...
 ```
 
 for TSP 1000 with search (N=4) :
@@ -124,9 +129,6 @@ python train.py
   --do_test_only 
   --n_rep 0 
   --rewrite_steps 3 
-  --new_denoise 
-  --res_file ...
 ```
-## Checkpoints
 
 IDEQ chekpoints can be downloaded from these links: [TSP500](https://drive.google.com/file/d/1KQMl7-8VglVkfah5hwAnuu0yc0u4LNjg/view?usp=sharing), [TSP1000](https://drive.google.com/file/d/10duH0TW_kl8Or3teJf4zqhAfGJTViYeN/view?usp=sharing)
