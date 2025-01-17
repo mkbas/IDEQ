@@ -7,7 +7,6 @@ import numpy as np
 import scipy.sparse
 import scipy.spatial
 import torch
-from utils.cython_merge.cython_merge import merge_cython
 import ctypes
 
 def batched_two_opt_torch(points, tour, max_iterations=1000, device="cpu"):
