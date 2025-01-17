@@ -13,9 +13,9 @@ cd -
 
 ## Reproducing scripts
 
-Use the following code to reproduce the results of the paper. This contains the fowlling sections: 
-- "data geenration" where the code is provided to generate the training and testing Euclidean 2D TSP random instances. TSP linstances and their solutions can be downloaded from the [TSPLIB website](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/)
-- "Checkpoint training": where the code is provided to retrain the checkpoint with the updated objective. Pre-trained chekcpoint files are also available in the 'checkpoint' folder. 
+Use the following code to reproduce the results of the paper. This contains the fowlling sub-sections: 
+- "data generation" where the code is provided to generate the training and testing Euclidean 2D TSP random instances. TSP linstances and their solutions can be downloaded from the [TSPLIB website](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/)
+- "Checkpoint training": where the code is provided to retrain the checkpoint with the updated objective. Pre-trained chekcpoint files are also available for downlad in the next section. 
 - Testing" where the code provided allows to reproduce the results 
 
 ### Data genearation 
@@ -130,5 +130,5 @@ python train.py
   --n_rep 0 
   --rewrite_steps 3 
 ```
-
+## Downloading pre-trained checkpoints
 IDEQ chekpoints can be downloaded from these links: [TSP500](https://drive.google.com/file/d/1KQMl7-8VglVkfah5hwAnuu0yc0u4LNjg/view?usp=sharing), [TSP1000](https://drive.google.com/file/d/10duH0TW_kl8Or3teJf4zqhAfGJTViYeN/view?usp=sharing)
