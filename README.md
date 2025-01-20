@@ -22,7 +22,9 @@ Use the following code to reproduce the results of the paper. This contains the 
 
 To generate the datasets used in our experiements run the folowing script: 
 ```bash
-python data_gen.py 
+cd data
+python data_gen.py
+cd -
 ```
 It will create files in the 'data' folder witht the names as used in the below reproducing scripts. 
 Random seeds are fixed (one for training dataset generation and one for testing dataset generation), they are the same as we used in our experiments. 
