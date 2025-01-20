@@ -57,7 +57,7 @@ python train.py
 ```
 
 #### IDEQ TSP-1000 training
-``bash
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3
 python train.py 
   --task tsp 
@@ -189,4 +189,5 @@ python test.py
 ```
 ## Downloading pre-trained checkpoints
 IDEQ chekpoints can be downloaded from these links: [IDEQ_TSP-500](https://drive.google.com/file/d/1KQMl7-8VglVkfah5hwAnuu0yc0u4LNjg/view?usp=sharing), [IDEQ_TSP-1000](https://drive.google.com/file/d/10duH0TW_kl8Or3teJf4zqhAfGJTViYeN/view?usp=sharing)
-The DIFUSCO TSP-100 categorical checkpoint that was used to train the IDEQ TQP-500 checkpoint can be download from [DIFUSCO's github ](https://drive.google.com/file/d/1G2nxIC_qfAswk9TstMFBOCpLQL4rDhKa/view?usp=drive_link)
+
+The DIFUSCO TSP-100 categorical checkpoint that was used to train the IDEQ TQP-500 checkpoint can be download from it's [original publication](https://drive.google.com/file/d/1G2nxIC_qfAswk9TstMFBOCpLQL4rDhKa/view?usp=drive_link)
