@@ -1,8 +1,12 @@
+"""The handler for training and evaluation."""
+
 import os
 from argparse import ArgumentParser
 
 import torch
 import wandb
+# os.environ["WANDB_MODE"] = "offline"
+# wandb.init()
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.callbacks.progress import TQDMProgressBar
@@ -10,32 +14,23 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.strategies.ddp import DDPStrategy
 from pytorch_lightning.utilities import rank_zero_info
 
-from train.pl_tsp_model import TSPModel
+from test.pl_tsp_model import TSPModel
+
+torch.cuda.amp.autocast(enabled=True)
+torch.cuda.empty_cache()
 
 def arg_parser():
   parser = ArgumentParser(description='Train a Pytorch-Lightning diffusion model on a TSP dataset.')
   parser.add_argument('--task', type=str, required=True)
   parser.add_argument('--storage_path', type=str, required=True)
-  parser.add_argument('--training_split', type=str, default='data/tsp/tsp50_train_concorde.txt')
-  parser.add_argument('--training_split_label_dir', type=str, default=None,
-                      help="Directory containing labels for training split (used for MIS).")
-  parser.add_argument('--validation_split', type=str, default='data/tsp/tsp50_test_concorde.txt')
+  parser.add_argument('--validation_split', type=str, default='data/tsp/tsp50_val_concorde.txt')
   parser.add_argument('--test_split', type=str, default='data/tsp/tsp50_test_concorde.txt')
   parser.add_argument('--validation_examples', type=int, default=64)
-
-  parser.add_argument('--batch_size', type=int, default=64)
-  parser.add_argument('--num_epochs', type=int, default=50)
-  parser.add_argument('--learning_rate', type=float, default=1e-4)
-  parser.add_argument('--weight_decay', type=float, default=0.0)
-  parser.add_argument('--lr_scheduler', type=str, default='constant')
-
-  parser.add_argument('--rev2opt', action='store_true')
 
   parser.add_argument('--num_workers', type=int, default=16)
   parser.add_argument('--fp16', action='store_true')
   parser.add_argument('--use_activation_checkpoint', action='store_true')
 
-  parser.add_argument('--diffusion_type', type=str, default='gaussian')
   parser.add_argument('--diffusion_schedule', type=str, default='linear')
   parser.add_argument('--diffusion_steps', type=int, default=1000)
   parser.add_argument('--inference_diffusion_steps', type=int, default=1000)
@@ -58,17 +53,29 @@ def arg_parser():
   parser.add_argument('--ckpt_path', type=str, default=None)
   parser.add_argument('--resume_weight_only', action='store_true')
 
-  parser.add_argument('--do_train', action='store_true')
-  parser.add_argument('--do_test', action='store_true')
   parser.add_argument('--do_valid_only', action='store_true')
+  parser.add_argument('--do_test_only', action='store_true')
+
+  parser.add_argument('--rewrite_ratio', type=float, default=0.25)
+  parser.add_argument('--norm', action='store_true')
+  parser.add_argument('--rewrite', action='store_true')
+  parser.add_argument('--rewrite_steps', type=int, default=3)
+  parser.add_argument('--inference_steps', type=int, default=5)
+
+  parser.add_argument('--batch_size', type=int, default=1)
+  parser.add_argument('--res_file', type=str, default=None)
+
 
   args = parser.parse_args()
   return args
 
 
-
 def main(args):
-    epochs= args.num_epochs
+    args.wandb_logger_name += "_norm" if args.norm else ""
+    args.wandb_logger_name += "_{}".format(args.rewrite_ratio)
+    args.wandb_logger_name += "_{}".format(args.parallel_sampling)
+    args.wandb_logger_name += "_{}".format(args.inference_diffusion_steps)
+
     project_name = args.project_name
 
     if args.task == 'tsp':
@@ -102,12 +109,13 @@ def main(args):
     trainer = Trainer(
       accelerator="auto",#"auto",
       devices=torch.cuda.device_count() if torch.cuda.is_available() else None,
-      max_epochs=epochs,
+      # devices=None,
       callbacks=[TQDMProgressBar(refresh_rate=20), checkpoint_callback, lr_callback],
       logger=wandb_logger,
       check_val_every_n_epoch=1,
       strategy=DDPStrategy(static_graph=True),
       precision=16 if args.fp16 else 32,
+      #inference_mode=False
     )
 
     rank_zero_info(
@@ -118,20 +126,13 @@ def main(args):
 
     ckpt_path = args.ckpt_path
 
-    if args.do_train:
-      if args.resume_weight_only:
-        model = model_class.load_from_checkpoint(ckpt_path, param_args=args)
-        trainer.fit(model)
-      else:
-        trainer.fit(model, ckpt_path=ckpt_path)
-
-      if args.do_test:
-        trainer.test(ckpt_path=checkpoint_callback.best_model_path)
-
-    elif args.do_test:
+    if args.do_valid_only:
       trainer.validate(model, ckpt_path=ckpt_path)
-      if not args.do_valid_only:
-        trainer.test(model, ckpt_path=ckpt_path)
+    elif args.do_test_only:
+      trainer.test(model, ckpt_path=ckpt_path)
+    else:
+      trainer.validate(model, ckpt_path=ckpt_path)
+      trainer.test(model, ckpt_path=ckpt_path)
     trainer.logger.finalize("success")
 
 
