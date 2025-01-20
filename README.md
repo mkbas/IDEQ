@@ -30,7 +30,7 @@ Random seeds are fixed (one for training dataset generation and one for testing 
 ### Checkpoint training 
 
 #### IDEQ TSP-500 training
-``bash
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3
 python train.py 
   --task tsp 
