@@ -165,7 +165,7 @@ python test.py
 ```
 
 for TSP 1000 with search (N=4) :
-```
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3  
 python test.py   
   --task tsp 
