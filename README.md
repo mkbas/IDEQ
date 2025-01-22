@@ -18,7 +18,7 @@ Use the following code to reproduce the results of the paper. This contains the 
 - "Checkpoint training" where contains the code to retrain the checkpoint with the updated objective. Pre-trained checkpoint files are also available for download in the next section. 
 - "Testing" contains the code to reproduce the results.
 
-### Data genearation 
+### Data generation 
 
 To generate the datasets used in our experiments run the following script: 
 ```bash
@@ -191,4 +191,4 @@ python test.py
 ## Downloading pre-trained checkpoints
 IDEQ chekpoints can be downloaded from these links: [IDEQ_TSP-500](https://drive.google.com/file/d/1KQMl7-8VglVkfah5hwAnuu0yc0u4LNjg/view?usp=sharing), [IDEQ_TSP-1000](https://drive.google.com/file/d/10duH0TW_kl8Or3teJf4zqhAfGJTViYeN/view?usp=sharing)
 
-The DIFUSCO TSP-100 categorical checkpoint that was used to train the IDEQ TQP-500 checkpoint can be download from it's [original publication](https://drive.google.com/file/d/1G2nxIC_qfAswk9TstMFBOCpLQL4rDhKa/view?usp=drive_link)
+The DIFUSCO TSP-100 categorical checkpoint that was used to train the IDEQ TQP-500 checkpoint can be download from its [original publication](https://drive.google.com/file/d/1G2nxIC_qfAswk9TstMFBOCpLQL4rDhKa/view?usp=drive_link)
