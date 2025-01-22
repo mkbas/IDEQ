@@ -3,7 +3,7 @@
 ## Installation
 
 Code is largely built on [T2TCO](https://github.com/Thinklab-SJTU/T2TCO) and [DIFUSCO](https://github.com/Edward-Sun/DIFUSCO).
-Environnement installation has to follow T2TCO's environnement specifications. In addition it requires compiling the Cmerge.so library from the C file in the utils folder :
+Environnement installation has to follow T2TCO environment specifications. In addition it requires compiling the Cmerge.so library from the C file in the utils folder:
 
 ```bash
 cd utils
@@ -13,21 +13,21 @@ cd -
 
 ## Reproducing scripts
 
-Use the following code to reproduce the results of the paper. This contains the fowlling sub-sections: 
-- "data generation" where the code is provided to generate the training and testing Euclidean 2D TSP random instances. TSP linstances and their solutions can be downloaded from the [TSPLIB website](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/)
-- "Checkpoint training": where the code is provided to retrain the checkpoint with the updated objective. Pre-trained chekcpoint files are also available for downlad in the next section. 
-- Testing" where the code provided allows to reproduce the results 
+Use the following code to reproduce the results of the paper. This contains the following sub-sections: 
+- "data generation" where contains the code to generate the training and testing Euclidean 2D TSP random instances. TSP instances and their solutions can be downloaded from the [TSPLIB website](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/)
+- "Checkpoint training" where contains the code to retrain the checkpoint with the updated objective. Pre-trained checkpoint files are also available for download in the next section. 
+- "Testing" contains the code to reproduce the results.
 
 ### Data genearation 
 
-To generate the datasets used in our experiements run the folowing script: 
+To generate the datasets used in our experiments run the following script: 
 ```bash
 cd data
 python data_gen.py
 cd -
 ```
-It will create files in the 'data' folder witht the names as used in the below reproducing scripts. 
-Random seeds are fixed (one for training dataset generation and one for testing dataset generation), they are the same as we used in our experiments. 
+Files will be created in the 'data' folder with the names as used in the reproducing scripts below.
+Random seeds are fixed (one for the training dataset generation and one for the testing dataset generation), they are the same as we used in our experiments.
 
 ### Checkpoint training 
 
@@ -87,7 +87,7 @@ python train.py
 
 ### Testing 
 
-For the results in the table 1 of the draft paper, the test/validation datasets were 2048 random 2D euclidean TSP instances. For Table 2 it was the tsplib instances.
+For the results in the table 1 of the submitted paper, the test/validation datasets were 2048 random 2D euclidean TSP instances. For Table 2 it was the tsplib instances.
 
 #### TSP 500:
 ```bash
