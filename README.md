@@ -112,7 +112,6 @@ python test.py
   --fp16 
   --do_test_only 
   --rewrite_steps 3 
-  --new_denoise 
 ```
 
 for TSP 500 with search (N=4) :
