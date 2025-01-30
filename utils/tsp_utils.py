@@ -48,6 +48,12 @@ def batched_two_opt_torch(points, tour, max_iterations=1000, device="cpu"):
     tour = cuda_tour.cpu().numpy()
   return tour, iterator
 
+lib=ctypes.CDLL('utils/Cmerge.so')
+lib.merge.argtypes=[np.ctypeslib.ndpointer(dtype=np.int32,ndim=1, flags='C_CONTIGUOUS'), 
+    ctypes.c_int,
+    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1,flags='C_CONTIGUOUS'),
+    #ctypes.POINTER(ctypes.c_int)
+]
 
 def numpy_merge(points, adj_mat):
   dists = np.linalg.norm(points[:, None] - points, axis=-1)
