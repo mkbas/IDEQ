@@ -16,7 +16,7 @@ def solve_tsp(nodes_coord):
     return tour
 
 
-for num_samples, filename, num_nodes, seed  in zip([5,10,5,10],#[128000, 2048, 128000, 2048],
+for num_samples, filename, num_nodes, seed  in zip([128000, 2048, 128000, 2048],
                                                    ["tsp500_train_concorde.txt","tsp500_test_concorde.txt","tsp1000_train_concorde.txt","tsp1000_test_concorde.txt"],
                                                    [500,500,1000,1000],
                                                    [1234,4321,1234,4321]):
